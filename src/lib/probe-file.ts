@@ -102,6 +102,7 @@ button { font: inherit; cursor:pointer; border:0; border-radius:.7rem; min-heigh
 .score { font-family: ui-serif, Palatino, serif; font-size:2.4rem; }
 .log { font-size:.8rem; color:var(--subtle); }
 .hidden { display:none }
+textarea { width:100%; min-height:8rem; margin-top:1rem; background:var(--surface); color:var(--fg); border:0; border-radius:.7rem; padding:.8rem; font:12px ui-monospace, SF Mono, Menlo, monospace; }
 </style>
 </head>
 <body>
@@ -133,6 +134,15 @@ try { window.speechSynthesis && window.speechSynthesis.getVoices(); } catch (e) 
 
 $("allow").onclick = () => void run();
 $("decline").onclick = () => { $("consent").classList.add("hidden"); $("declined").classList.remove("hidden"); };
+
+function esc(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, ["&", "amp;"].join(""))
+    .replace(/</g, ["&", "lt;"].join(""))
+    .replace(/>/g, ["&", "gt;"].join(""))
+    .replace(/"/g, ["&", "quot;"].join(""))
+    .replace(/'/g, ["&", "#39;"].join(""));
+}
 
 function parseBrowser(ua, nav) {
   const brand = nav.userAgentData && nav.userAgentData.brands && nav.userAgentData.brands.find((b) => !/not/i.test(b.brand) && b.brand !== "Chromium");
@@ -339,17 +349,20 @@ async function run() {
   $("running").classList.add("hidden");
   $("done").classList.remove("hidden");
   $("done").innerHTML =
-    '<p class="brand">Probe ' + CODE + '</p>' +
+    '<p class="brand">Probe ' + esc(CODE) + '</p>' +
     '<div style="display:flex;justify-content:space-between;align-items:end;gap:1rem;margin-top:1rem">' +
-    '<h1 style="margin:0">' + diagnosis.headline + '</h1>' +
+    '<h1 style="margin:0">' + esc(diagnosis.headline) + '</h1>' +
     '<div class="score">' + diagnosis.score + '</div></div>' +
-    '<p>' + diagnosis.summary + '</p>' +
-    '<p class="mono muted">' + diagnosis.status.toUpperCase() + " · " + diagnosis.primaryArea + " · " + telemetry.os + '</p>' +
+    '<p>' + esc(diagnosis.summary) + '</p>' +
+    '<p class="mono muted">' + esc(diagnosis.status.toUpperCase()) + " · " + esc(diagnosis.primaryArea) + " · " + esc(telemetry.os) + '</p>' +
     '<div style="margin-top:1.5rem">' + diagnosis.findings.map((f) =>
-      '<div class="find"><span class="dot ' + f.severity + '"></span><div><div>' + f.title + '</div><div class="muted">' + f.detail + '</div></div></div>'
+      '<div class="find"><span class="dot ' + esc(f.severity) + '"></span><div><div>' + esc(f.title) + '</div><div class="muted">' + esc(f.detail) + '</div></div></div>'
     ).join("") + '</div>' +
     '<div class="row"><button class="primary" type="button" id="speak">Read this aloud</button><button class="secondary" type="button" id="copy">Copy report</button></div>' +
-    '<p class="muted" id="copied">Unmute this computer, then tap Read this aloud.</p>';
+    '<p class="muted" id="copied">Unmute this computer, then tap Read this aloud. Then Copy report and send that text back. No account.</p>' +
+    '<textarea id="reportbox" readonly></textarea>';
+  $("reportbox").value = report;
+  $("reportbox").onclick = function () { this.focus(); this.select(); };
   try { window.speechSynthesis.getVoices(); } catch (e) {}
   const spoken = diagnosis.headline + ". " + diagnosis.summary + ". " + diagnosis.findings.filter((f) => f.severity === "crit" || f.severity === "warn").map((f) => f.title + ". " + f.detail).join(" ") + (diagnosis.fixes[0] ? " What to do: " + diagnosis.fixes[0].steps.join(". ") : "");
   $("speak").onclick = () => {
@@ -364,15 +377,9 @@ async function run() {
     $("speak").textContent = ok ? "Stop reading" : "Read this aloud";
   };
   $("copy").onclick = async () => {
+    $("reportbox").focus(); $("reportbox").select();
     const ok = await copyText(report);
-    $("copied").textContent = ok ? "Copied. Send that text back — no account needed." : "Select the text below and copy it.";
-    if (!ok) {
-      const pre = document.createElement("textarea");
-      pre.value = report;
-      pre.style.cssText = "width:100%;min-height:10rem;margin-top:1rem;background:#14161a;color:#eeeee8;border:0;border-radius:.7rem;padding:.8rem;font:12px ui-monospace,monospace";
-      $("done").appendChild(pre);
-      pre.focus(); pre.select();
-    }
+    $("copied").textContent = ok ? "Copied. Send that text back — no account needed." : "The report is selected below. Copy it and send it back.";
   };
 }
 </script>

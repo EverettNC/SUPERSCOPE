@@ -4,8 +4,8 @@ import { BackLink, Shell } from "@/components/shell";
 import { Reticle } from "@/components/reticle";
 import { ReportView } from "@/components/report";
 import { Button } from "@/components/ui/button";
-import { copyText, selectInput, sendInstructions } from "@/lib/clipboard";
-import { buildProbeHtml, probeFileName, saveProbeFile } from "@/lib/probe-file";
+import { copyText, copyFromElement, selectInput, sendInstructions, publicProbeUrl } from "@/lib/clipboard";
+import { buildProbeHtml, saveProbeFile } from "@/lib/probe-file";
 import { completeProbe, getProbe, type ProbeRow } from "@/lib/probes";
 import { decodeTicket } from "@/lib/ticket";
 import { useReports } from "@/lib/store";
@@ -17,14 +17,16 @@ function SessionPage() {
   const { code } = Route.useParams();
   const addReport = useReports((s) => s.addReport);
   const [probe, setProbe] = useState<ProbeRow | null>(null);
-  const [copied, setCopied] = useState<"idle" | "html" | "file" | "note" | "select">("idle");
+  const [copied, setCopied] = useState<"idle" | "link" | "note" | "html" | "file" | "select">("idle");
   const [saved, setSaved] = useState(false);
   const [paste, setPaste] = useState("");
   const [pasteError, setPasteError] = useState<string | null>(null);
   const [pastedReport, setPastedReport] = useState<Report | null>(null);
-  const [showSource, setShowSource] = useState(false);
   const copyTimer = useRef<number>(0);
+  const sourceRef = useRef<HTMLTextAreaElement>(null);
   const html = buildProbeHtml(code);
+  const link = publicProbeUrl(code);
+  const linkRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -56,6 +58,10 @@ function SessionPage() {
   }, [code]);
 
   useEffect(() => {
+    selectInput(linkRef.current);
+  }, [link]);
+
+  useEffect(() => {
     if (saved) return;
     if (probe?.status === "complete" && probe.diagnosis && probe.telemetry) {
       addReport({
@@ -71,7 +77,7 @@ function SessionPage() {
     }
   }, [addReport, probe, saved]);
 
-  function flash(kind: "html" | "file" | "note" | "select") {
+  function flash(kind: "link" | "html" | "file" | "note" | "select") {
     if (copyTimer.current) window.clearTimeout(copyTimer.current);
     setCopied(kind);
     copyTimer.current = window.setTimeout(() => setCopied("idle"), 2400);
@@ -79,26 +85,23 @@ function SessionPage() {
 
   async function sendFile() {
     const result = await saveProbeFile(code);
-    setShowSource(true);
     requestAnimationFrame(() => {
-      selectInput(document.getElementById("probe-source") as HTMLTextAreaElement | null);
+      selectInput(sourceRef.current);
     });
     if (result.saved) flash("file");
     else if (result.copied) flash("html");
     else flash("select");
   }
 
-  async function copyHtml() {
-    const ok = await copyText(html);
-    if (ok) {
-      flash("html");
+  async function copyLink() {
+    if (copyFromElement(linkRef.current)) {
+      flash("link");
       return;
     }
-    setShowSource(true);
-    requestAnimationFrame(() => {
-      selectInput(document.getElementById("probe-source") as HTMLTextAreaElement | null);
-    });
-    flash("select");
+    const ok = await copyText(link);
+    selectInput(linkRef.current);
+    if (ok) flash("link");
+    else flash("select");
   }
 
   async function copyNote() {
@@ -173,45 +176,52 @@ function SessionPage() {
             {waiting ? "Dispatch" : "Probe is running"}
           </p>
           <h1 className="mt-2 font-display text-3xl text-fg sm:text-4xl">
-            {waiting ? "Send the file. Not this window." : "Reading the machine."}
+            {waiting ? "Send this link. Not this window." : "Reading the machine."}
           </h1>
-          <p className="mt-3 max-w-lg text-sm text-warn">
-            This preview is locked. Anyone you send it to will be told they do
-            not have access. Do not share this page.
-          </p>
           <p className="mt-3 max-w-lg text-sm text-muted">
-            Copy the probe, paste it into Notepad or Notes, save as{" "}
-            <span className="font-mono text-fg">{probeFileName(code)}</span>, and
-            send that file. They open it and tap Allow. No Grok account.
+            Text them the link. They tap it on the sick computer, then Allow.
+            No Grok. No account. Nothing installs.
           </p>
           <p className="mt-8 font-mono text-4xl tracking-[0.18em] text-fg">{code}</p>
 
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-            <Button type="button" onClick={() => void copyHtml()}>
-              {copied === "html"
-                ? "Copied — paste into a .html file"
+          <label htmlFor="probe-link" className="sr-only">
+            Probe link
+          </label>
+          <input
+            id="probe-link"
+            ref={linkRef}
+            readOnly
+            value={link}
+            onFocus={(e) => e.currentTarget.select()}
+            onClick={(e) => e.currentTarget.select()}
+            className="mt-6 h-11 w-full rounded-lg bg-surface px-3 font-mono text-sm text-fg shadow-border"
+          />
+
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <Button type="button" onClick={() => void copyLink()}>
+              {copied === "link"
+                ? "Copied — text them that link"
                 : copied === "select"
                   ? "Selected — copy it"
-                  : "Copy probe"}
+                  : "Copy link"}
             </Button>
-            <Button type="button" variant="secondary" onClick={sendFile}>
-              {copied === "file" ? "Saved — send that file" : "Download file"}
-            </Button>
-            <Button type="button" variant="ghost" onClick={() => void copyNote()}>
+            <Button type="button" variant="secondary" onClick={() => void copyNote()}>
               {copied === "note" ? "Copied" : "Copy instructions"}
+            </Button>
+            <Button type="button" variant="ghost" onClick={sendFile}>
+              {copied === "file" ? "Saved — send that file" : "Download file"}
             </Button>
           </div>
 
-          {showSource ? (
-            <textarea
-              id="probe-source"
-              readOnly
-              value={html}
-              onFocus={(e) => e.currentTarget.select()}
-              onClick={(e) => e.currentTarget.select()}
-              className="mt-4 h-32 w-full resize-y rounded-lg bg-surface p-3 font-mono text-xs text-fg shadow-border"
-            />
-          ) : null}
+          <textarea
+            id="probe-source"
+            ref={sourceRef}
+            readOnly
+            value={html}
+            className="sr-only"
+            aria-hidden="true"
+            tabIndex={-1}
+          />
 
           <div className="mt-10">
             <label htmlFor="paste-report" className="font-mono text-xs tracking-[0.18em] text-muted uppercase">

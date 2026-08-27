@@ -88,7 +88,7 @@ var HEADERS = { TSS_SHELL: "X-TSS_SHELL" };
 * the dev styles URL for route-scoped CSS collection.
 */
 async function getStartManifest(matchedRoutes) {
-	const { tsrStartManifest } = await import("../_tanstack-start-manifest_v-MIKcJTqo.mjs");
+	const { tsrStartManifest } = await import("../_tanstack-start-manifest_v-CvKvyXEu.mjs");
 	const startManifest = tsrStartManifest();
 	let routes = startManifest.routes;
 	routes[rootRouteId];
@@ -116,10 +116,6 @@ var manifest = {
 		functionName: "startProbe_createServerFn_handler",
 		importer: () => import("./probes-Etit-ZIc.mjs")
 	},
-	"68489e16806542c3c73497dcb02152f227fede0adf65d4b056613611ad619793": {
-		functionName: "explainDiagnosis_createServerFn_handler",
-		importer: () => import("./ai-CuIjUYXY.mjs")
-	},
 	"9e88fbcdf1c5982a0632d904b537a09dd8aeb517d65f8973d159ee93f44192e0": {
 		functionName: "getProbe_createServerFn_handler",
 		importer: () => import("./probes-Etit-ZIc.mjs")
@@ -127,6 +123,10 @@ var manifest = {
 	"b7e50b2760624703db69aff3394ffefcea078e651a5a34c6d68e1486dfc45068": {
 		functionName: "completeProbe_createServerFn_handler",
 		importer: () => import("./probes-Etit-ZIc.mjs")
+	},
+	"e0b42287816bcfd729f7de509177e8591b58a7891b72fc7f1291e23662aff5e2": {
+		functionName: "synthesize_createServerFn_handler",
+		importer: () => import("./voice-D4cGp452.mjs")
 	}
 };
 async function getServerFnById(id, access) {
@@ -1396,7 +1396,7 @@ var getBaseManifest = getProdBaseManifest;
 var createEarlyHintsForRequest = createEarlyHintsCollector;
 async function loadEntries() {
 	const [routerEntry, startEntry, pluginAdapters] = await Promise.all([
-		import("./router-BI16N8Ti.mjs").then((n) => n.t),
+		import("./router-CE-Hy2DG.mjs").then((n) => n.t),
 		import("./start-5Z2QO8AU.mjs"),
 		import("./empty-plugin-adapters-D9UWiqvJ.mjs")
 	]);

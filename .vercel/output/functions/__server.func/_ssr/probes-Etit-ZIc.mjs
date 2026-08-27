@@ -1,6 +1,6 @@
+import { i as string, o as unknown, r as object } from "../_libs/zod.mjs";
 import { t as createServerFn } from "./ssr.mjs";
 import { t as createServerRpc } from "./createServerRpc-A6pJPYTF.mjs";
-import { a as string, i as object, s as unknown } from "../_libs/zod.mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/probes-Etit-ZIc.js
 var _0002_probes_default = "-- Remote diagnostic probe sessions. Unowned rows, keyed by a random code.\n-- Telemetry is device facts (cores, memory, network) — no names or emails.\ncreate table if not exists probes (\n  code          text primary key,\n  status        text not null default 'waiting',\n  created_at    timestamptz not null default now(),\n  started_at    timestamptz,\n  completed_at  timestamptz,\n  telemetry     jsonb,\n  diagnosis     jsonb\n);\n\ncreate index if not exists probes_created_at_idx on probes (created_at desc);\n";
 /**

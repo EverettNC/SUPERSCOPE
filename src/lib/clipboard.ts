@@ -57,6 +57,15 @@ export function selectInput(el: HTMLInputElement | HTMLTextAreaElement | null): 
   return true;
 }
 
+export function copyFromElement(el: HTMLInputElement | HTMLTextAreaElement | null): boolean {
+  if (!selectInput(el)) return false;
+  try {
+    return document.execCommand("copy");
+  } catch {
+    return false;
+  }
+}
+
 /** Origins that demand a Grok account before the page even loads. Never send these. */
 export function isGatedShareOrigin(origin: string): boolean {
   try {
@@ -70,6 +79,12 @@ export function isGatedShareOrigin(origin: string): boolean {
   } catch {
     return true;
   }
+}
+
+export const PUBLIC_PROBE_URL = "https://yorkie-probe.vercel.app";
+
+export function publicProbeUrl(_code?: string): string {
+  return PUBLIC_PROBE_URL;
 }
 
 function publicHost(): string {
@@ -98,14 +113,12 @@ export function shareUrlFor(path: string): string | null {
 }
 
 export function sendInstructions(code: string): string {
+  const url = publicProbeUrl(code);
   return [
-    `I'm sending you a Scope probe file: scope-probe-${code}.html`,
+    `Open this on the computer that's acting up:`,
+    url,
     ``,
-    `Open that file on the computer that's acting up. Tap Allow.`,
-    `No account. No Grok login. Nothing installs.`,
-    ``,
-    `When it finishes, tap Copy report and send that text back to me.`,
-    ``,
-    `Do not open a Grok preview link. That page is locked. Use the file.`,
+    `If it's already open, refresh once.`,
+    `Tap Allow. That's it. The report comes back on its own.`,
   ].join("\n");
 }

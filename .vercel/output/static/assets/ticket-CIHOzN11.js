@@ -1,0 +1,1 @@
+function e(e){let t=e.trim().match(/SCOPE1\.([A-Za-z0-9+/=\s]+)/);if(!t?.[1])return null;try{let e=atob(t[1].replace(/\s/g,``)),n=Uint8Array.from(e,e=>e.charCodeAt(0)),r=new TextDecoder().decode(n),i=JSON.parse(r);return i?.v!==1||!i.code||!i.diagnosis||!i.telemetry?null:i}catch{return null}}export{e as t};

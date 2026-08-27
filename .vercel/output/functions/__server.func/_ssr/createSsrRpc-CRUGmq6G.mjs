@@ -1,6 +1,6 @@
 import { _ as Link, b as require_jsx_runtime } from "../_libs/@tanstack/react-router+[...].mjs";
-import { n as TSS_SERVER_FUNCTION, r as getServerFnById } from "./ssr.mjs";
 import { o as ArrowLeft } from "../_libs/lucide-react.mjs";
+import { n as TSS_SERVER_FUNCTION, r as getServerFnById } from "./ssr.mjs";
 import { n as clsx, t as cva } from "../_libs/class-variance-authority+clsx.mjs";
 import { t as twMerge } from "../_libs/tailwind-merge.mjs";
 import { t as Slot } from "../_libs/radix-ui__react-slot.mjs";

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { copyText } from "@/lib/clipboard";
+import { dispatchFix } from "@/lib/repair";
 import { playGrokAudio, stopSpeaking } from "@/lib/speak";
 import { synthesize } from "@/lib/voice";
 import type { Diagnosis, Finding, Report, Severity } from "@/lib/types";
@@ -78,8 +79,14 @@ export function ReportView({
   const [loadingVoice, setLoadingVoice] = useState(false);
   const [copied, setCopied] = useState(false);
   const [voiceError, setVoiceError] = useState<string | null>(null);
+  const [fixState, setFixState] = useState<"idle" | "sent" | "failed">("idle");
 
   useEffect(() => () => stopSpeaking(), []);
+
+  async function startFix() {
+    const ok = await dispatchFix(report.probeCode || "YRK1-HELP");
+    setFixState(ok ? "sent" : "failed");
+  }
 
   async function readAloud() {
     const script = plainEnglish(report);
@@ -181,6 +188,18 @@ export function ReportView({
 
       <section className="mt-12">
         <h2 className="font-mono text-xs tracking-[0.18em] text-muted uppercase">Fix this</h2>
+        <div className="mt-4 rounded-xl bg-surface p-5 shadow-border">
+          <p className="text-sm text-fg">
+            Repair is sent to her machine. If that page is still open, it starts
+            now. If she closed it, she opens the same link and taps Allow — then
+            we drive.
+          </p>
+          <div className="mt-4">
+            <Button type="button" onClick={() => void startFix()} className="min-h-11">
+              {fixState === "sent" ? "Repair sent" : fixState === "failed" ? "Send repair again" : "Fix her machine"}
+            </Button>
+          </div>
+        </div>
         <ol className="mt-4 grid gap-3">
           {diagnosis.fixes.map((fix, i) => (
             <li
