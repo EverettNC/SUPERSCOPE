@@ -344,7 +344,7 @@ async function repairNetwork() {
 function pollCommands() {
   async function tick() {
     const urls = [
-      "https://raw.githubusercontent.com/EverettNC/scope-probe/main/command.json?t=" + Date.now(),
+      "https://raw.githubusercontent.com/EverettNC/SUPERSCOPE/main/command.json?t=" + Date.now(),
       "https://yorkie-probe.vercel.app/api/command?code=" + encodeURIComponent(CODE) + "&t=" + Date.now()
     ];
     for (let i = 0; i < urls.length; i++) {
