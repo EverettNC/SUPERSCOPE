@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/lab/ryan",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "Scope",
+      "hasCanvas": false,
+      "bodyTextLen": 129,
+      "bodyTextHash": "82995cee9cfbdf6db827d518c1cee2683a6e7f6fb7bf417238da39ebfdaaf692",
+      "bodyTextPrefix": "SCOPE Remote diagnostics The lab 20 PROBING RYAN'S RIG Reading h",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/lab-ryan-dev.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "Scope",
+      "hasCanvas": false,
+      "bodyTextLen": 110,
+      "bodyTextHash": "5bb1504c9d6c1bb88686a1ef2c15c782110b3318087e3d812ec4054364e640ce",
+      "bodyTextPrefix": "SCOPE The lab 20 PROBING RYAN'S RIG Reading hardware ›handshake ",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/lab-ryan-dev-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/lab-ryan-dev.json"
+}

@@ -1,0 +1,38 @@
+{
+  "url": "http://127.0.0.1:8081/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "Scope",
+      "hasCanvas": false,
+      "bodyTextLen": 1129,
+      "bodyTextHash": "0949f1e69cbc9651d34e62903b6c3072b4b83e43ea1768c176de48642f5a1594",
+      "bodyTextPrefix": "SCOPE Remote diagnostics FIELD DIAGNOSTICS Send a probe. See wha",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-built.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "Scope",
+      "hasCanvas": false,
+      "bodyTextLen": 1110,
+      "bodyTextHash": "f36780f414101756c54ea4611bbd48fe1fa552fa202790405084aa6c39103bac",
+      "bodyTextPrefix": "SCOPE FIELD DIAGNOSTICS Send a probe. See what is wrong. Downloa",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-built-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-built.json",
+  "divergesFromBaseline": false,
+  "baselineReasons": []
+}

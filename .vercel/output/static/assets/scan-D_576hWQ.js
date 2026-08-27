@@ -1,0 +1,1 @@
+import{c as e}from"./createLucideIcon-DvKOTg4G.js";import{a as t,i as n}from"./createServerFn-pHgfwRL_.js";import{t as r}from"./scan-flow-gGUNiaBT.js";var i=e();function a(){return(0,i.jsxs)(t,{children:[(0,i.jsx)(n,{label:`Home`}),(0,i.jsx)(r,{targetName:`This computer`})]})}export{a as component};
