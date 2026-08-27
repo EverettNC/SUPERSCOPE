@@ -4,15 +4,15 @@ Remote computer check for a dispatcher.
 
 She gets one public link. No account. No install. No source dump. She taps **Allow**. We pull the report. We work the machine from here.
 
-**Live probe:** [yorkie-probe.vercel.app](https://yorkie-probe.vercel.app)
+**This is the house.** There are not three products.
 
-## Doors
-
-| Door | What it is |
+| Name | What it actually is |
 |---|---|
-| This repo | Dispatcher board + scan engine |
-| [yorkie-probe](https://github.com/EverettNC/yorkie-probe) | The HTML she opens |
-| [scope-probe](https://github.com/EverettNC/scope-probe) | Command drop the probe polls |
+| **SUPERSCOPE** | The dispatcher board. Source of truth. |
+| [scope-probe](https://github.com/EverettNC/scope-probe) | Public drop — the page she opens, plus the command file it polls |
+| yorkie-probe | Early copy. Folded. Archived. |
+
+**Live probe:** [yorkie-probe.vercel.app](https://yorkie-probe.vercel.app)
 
 ## How it runs
 
