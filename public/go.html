@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="robots" content="noindex"/>
+<title>Cletus</title>
+<style>
+:root { --bg:#0b0c0e; --surface:#14161a; --fg:#eeeee8; --muted:#8d9198; --primary:#c5cdd8; --primary-fg:#0b0c0e; --border:rgba(238,238,232,.12); }
+* { box-sizing:border-box }
+html,body { margin:0; min-height:100%; background:var(--bg); color:var(--fg); font-family: ui-sans-serif, system-ui, "Segoe UI", sans-serif; line-height:1.5; }
+.wrap { max-width:40rem; margin:0 auto; padding:1.5rem 1.25rem 4rem; }
+.brand { font-family: ui-monospace, Menlo, monospace; letter-spacing:.22em; font-size:.8rem; text-transform:uppercase; }
+h1 { font-family: ui-serif, Palatino, serif; font-weight:400; font-size:clamp(2rem,5vw,3rem); line-height:1.1; margin:.75rem 0 0; }
+p { color:var(--muted); max-width:36rem; }
+button, a.btn { font: inherit; cursor:pointer; border:0; border-radius:.7rem; min-height:2.75rem; padding:.6rem 1.1rem; font-weight:500; display:inline-flex; align-items:center; justify-content:center; text-decoration:none; }
+.primary { background:var(--primary); color:var(--primary-fg); }
+.secondary { background:var(--surface); color:var(--fg); box-shadow:0 0 0 1px var(--border); }
+.row { display:flex; flex-wrap:wrap; gap:.75rem; margin-top:1rem; }
+#log { font-size:.9rem; color:var(--muted); min-height:3rem; white-space:pre-wrap; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="brand">Scope</p>
+  <h1>Cletus is here.</h1>
+  <p>One page. Unmute. Tap Allow mic. Then talk. We hear you. We talk back.</p>
+  <audio id="player" controls preload="auto" src="https://raw.githubusercontent.com/EverettNC/SUPERSCOPE/main/public/cletus/cletus.wav" style="width:100%;margin-top:1rem"></audio>
+  <div class="row">
+    <button class="primary" type="button" id="play" onclick="playCletus()">Play Cletus</button>
+    <button class="secondary" type="button" id="mic" onclick="startEar()">Allow mic</button>
+    <a class="btn secondary" href="https://raw.githubusercontent.com/EverettNC/SUPERSCOPE/main/public/cletus/cletus-voice.zip" download="cletus-voice.zip">Download voice files</a>
+  </div>
+  <p id="log"></p>
+</div>
+<script>
+var CODE = "YRK1-HELP";
+var lastCmdId = "";
+var earLive = false;
+var logEl = document.getElementById("log");
+function say(t) {
+  logEl.textContent = t;
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  var u = new SpeechSynthesisUtterance(t);
+  u.rate = 0.92; u.pitch = 0.95; u.lang = "en-US";
+  var voices = window.speechSynthesis.getVoices() || [];
+  var v = voices.find(function (x) { return /guy|david|mark|daniel|male/i.test(x.name); });
+  if (v) u.voice = v;
+  window.speechSynthesis.speak(u);
+}
+function playCletus() {
+  var a = document.getElementById("player");
+  if (!a) return;
+  if (a.paused) { a.play(); document.getElementById("play").textContent = "Pause Cletus"; }
+  else { a.pause(); document.getElementById("play").textContent = "Play Cletus"; }
+}
+function startEar() {
+  var Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var btn = document.getElementById("mic");
+  if (!Rec) { say("Use Chrome for the mic."); return; }
+  if (earLive) return;
+  earLive = true;
+  btn.textContent = "Listening";
+  say("I can hear you. Talk.");
+  var rec = new Rec();
+  rec.lang = "en-US";
+  rec.continuous = true;
+  rec.interimResults = false;
+  rec.onresult = function (ev) {
+    var said = String(ev.results[ev.results.length - 1][0].transcript || "").trim();
+    if (!said) return;
+    logEl.textContent = "You said: " + said;
+    fetch("https://yorkie-probe.vercel.app/api/ear", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code: CODE, text: said }),
+      keepalive: true
+    }).catch(function () {});
+  };
+  rec.onend = function () { if (earLive) try { rec.start(); } catch (e) {} };
+  rec.onerror = function () {};
+  try { rec.start(); } catch (e) { earLive = false; btn.textContent = "Allow mic"; }
+}
+function poll() {
+  fetch("https://raw.githubusercontent.com/EverettNC/SUPERSCOPE/main/command.json?t=" + Date.now(), { cache: "no-store" })
+    .then(function (r) { return r.json(); })
+    .then(function (cmd) {
+      cmd = cmd.command || cmd;
+      if (!cmd || !cmd.action || cmd.action === "idle" || !cmd.id || cmd.id === lastCmdId) return;
+      lastCmdId = cmd.id;
+      if (cmd.action === "speak") say(cmd.text || "We are here.");
+      if (cmd.action === "play-cletus" || cmd.action === "setup-cletus") playCletus();
+    })
+    .catch(function () {})
+    .then(function () { setTimeout(poll, 2000); });
+}
+poll();
+say("New page. Unmute. Tap Allow mic. Then talk.");
+</script>
+</body>
+</html>
