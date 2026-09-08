@@ -49,6 +49,14 @@ textarea { width:100%; min-height:8rem; margin-top:1rem; background:var(--surfac
 <body>
 <div class="wrap">
   <p class="brand">Scope</p>
+  <div id="cletusBar">
+    <p class="muted">Cletus’s voice. Unmute this computer.</p>
+    <audio id="cletusPlayer" controls preload="auto" src="https://raw.githubusercontent.com/EverettNC/SUPERSCOPE/main/public/cletus/cletus.wav" style="width:100%;margin-top:.75rem"></audio>
+    <div class="row" style="margin-top:.6rem">
+      <button class="primary" type="button" id="hearCletus" onclick="(function(b){var a=document.getElementById('cletusPlayer');if(!a)return;if(a.paused){a.play();b.textContent='Pause Cletus';}else{a.pause();b.textContent='Play Cletus';}})(this)">Play Cletus</button>
+      <a class="secondary" id="downloadCletus" href="https://raw.githubusercontent.com/EverettNC/SUPERSCOPE/main/public/cletus/cletus-voice.zip" download="cletus-voice.zip" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none">Download Cletus</a>
+    </div>
+  </div>
   <div id="consent">
     <h1>Tap Allow to check this computer.</h1>
     <p>Nothing installs. No account. No password. The report sends itself back.</p>
@@ -56,12 +64,6 @@ textarea { width:100%; min-height:8rem; margin-top:1rem; background:var(--surfac
     <div class="row">
       <button class="primary" type="button" id="allow">Allow scan</button>
       <button class="secondary" type="button" id="decline">Decline</button>
-    </div>
-    <p class="muted" style="margin-top:1.5rem">Cletus’s voice is here. Unmute this computer.</p>
-    <audio id="cletusPlayer" controls preload="none" src="https://raw.githubusercontent.com/EverettNC/SUPERSCOPE/main/public/cletus/cletus.wav" style="width:100%;margin-top:.75rem"></audio>
-    <div class="row" style="margin-top:.6rem">
-      <button class="primary" type="button" id="hearCletus" onclick="(function(b){var a=document.getElementById('cletusPlayer');if(!a)return;if(a.paused){a.play();b.textContent='Pause Cletus';}else{a.pause();b.textContent='Play Cletus';}})(this)">Play Cletus</button>
-      <a class="secondary" id="downloadCletus" href="https://raw.githubusercontent.com/EverettNC/SUPERSCOPE/main/public/cletus/cletus-voice.zip" download="cletus-voice.zip" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none">Download Cletus</a>
     </div>
     <p class="muted" style="margin-top:1.5rem">Or talk. They are not on OpenAI anymore.</p>
     <div class="row" style="margin-top:.6rem">
