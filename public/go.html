@@ -6,41 +6,32 @@
 <meta name="robots" content="noindex"/>
 <title>Cletus</title>
 <style>
-:root { --bg:#0b0c0e; --fg:#eeeee8; --muted:#8d9198; --btn:#f3edd8; --btn-fg:#111; --border:rgba(238,238,232,.14); }
+:root { --bg:#0b0c0e; --fg:#eeeee8; --muted:#8d9198; --btn:#f3edd8; --btn-fg:#111; }
 * { box-sizing:border-box }
 html,body { margin:0; min-height:100%; background:var(--bg); color:var(--fg); font-family: ui-sans-serif, system-ui, "Segoe UI", sans-serif; }
 .wrap { max-width:40rem; margin:0 auto; padding:2rem 1.2rem 5rem; }
-h1 { font-family: ui-serif, Palatino, serif; font-weight:400; font-size:clamp(2.2rem,6vw,3.2rem); line-height:1.05; margin:0 0 1rem; }
-p { color:var(--muted); font-size:1.15rem; line-height:1.45; }
-.row { display:flex; flex-wrap:wrap; gap:.75rem; margin-top:1.25rem; }
-button, a.btn {
-  font: inherit; cursor:pointer; border:0; border-radius:.9rem;
-  min-height:3.4rem; padding:.8rem 1.2rem; font-weight:700;
-  display:inline-flex; align-items:center; justify-content:center;
-  text-decoration:none; font-size:1.1rem;
+h1 { font-family: ui-serif, Palatino, serif; font-weight:400; font-size:clamp(2.4rem,7vw,3.4rem); line-height:1.05; margin:0 0 1rem; }
+p { color:var(--muted); font-size:1.2rem; line-height:1.45; }
+#play {
+  display:block; width:100%; min-height:6rem; margin-top:1.4rem; border:0; border-radius:1.1rem;
+  background:var(--btn); color:var(--btn-fg); cursor:pointer;
+  font: 800 1.7rem/1.1 ui-sans-serif, system-ui, "Segoe UI", sans-serif;
 }
-.primary { background:var(--btn); color:var(--btn-fg); }
-.secondary { background:transparent; color:var(--fg); box-shadow:0 0 0 1px var(--border); }
 #log { margin-top:1.2rem; color:var(--muted); min-height:3rem; white-space:pre-wrap; }
 audio { width:100%; margin-top:1rem; }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Cletus.</h1>
-  <p>No terminal. No folder. Download cletus.wav. Open Voice Creation. Import that file. Look for Import, Load, or Add voice. Not 1 through 6.</p>
-  <audio id="player" controls preload="auto" src="https://raw.githubusercontent.com/EverettNC/SUPERSCOPE/main/public/cletus/cletus.wav"></audio>
-  <div class="row">
-    <a class="btn primary" href="https://raw.githubusercontent.com/EverettNC/SUPERSCOPE/main/public/cletus/cletus.wav" download="cletus.wav">Download cletus.wav</a>
-    <button class="secondary" type="button" onclick="playCletus()">Play Cletus</button>
-    <button class="secondary" type="button" onclick="startEar()">Allow mic</button>
-  </div>
+  <h1>Cletus is here.</h1>
+  <p>Do not open Voice Creation. Stay on this page. Tap Play Cletus.</p>
+  <audio id="player" preload="auto" src="https://raw.githubusercontent.com/EverettNC/SUPERSCOPE/main/public/cletus/cletus.wav"></audio>
+  <button id="play" type="button" onclick="playCletus()">Play Cletus</button>
   <p id="log"></p>
 </div>
 <script>
 var CODE = "YRK1-HELP";
 var lastCmdId = "";
-var earLive = false;
 var logEl = document.getElementById("log");
 function say(t) {
   logEl.textContent = t;
@@ -63,28 +54,30 @@ function tellHouse(text) {
 }
 function playCletus() {
   var a = document.getElementById("player");
+  var b = document.getElementById("play");
   if (!a) return;
-  if (a.paused) a.play(); else a.pause();
+  if (a.paused) {
+    a.play().then(function () { b.textContent = "Pause Cletus"; tellHouse("Playing Cletus"); }).catch(function () {
+      say("Tap Play Cletus again.");
+    });
+  } else {
+    a.pause();
+    b.textContent = "Play Cletus";
+  }
 }
 function startEar() {
   var Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!Rec) { say("Use Chrome for the mic."); return; }
-  if (earLive) return;
-  earLive = true;
-  say("I can hear you.");
+  if (!Rec) return;
   var rec = new Rec();
   rec.lang = "en-US";
   rec.continuous = true;
   rec.interimResults = false;
   rec.onresult = function (ev) {
     var said = String(ev.results[ev.results.length - 1][0].transcript || "").trim();
-    if (!said) return;
-    logEl.textContent = "You said: " + said;
-    tellHouse(said);
+    if (said) tellHouse(said);
   };
-  rec.onend = function () { if (earLive) try { rec.start(); } catch (e) {} };
-  rec.onerror = function () {};
-  try { rec.start(); } catch (e) { earLive = false; }
+  rec.onend = function () { try { rec.start(); } catch (e) {} };
+  try { rec.start(); } catch (e) {}
 }
 function poll() {
   fetch("https://yorkie-probe.vercel.app/command.json?t=" + Date.now(), { cache: "no-store" })
@@ -100,7 +93,7 @@ function poll() {
     .then(function () { setTimeout(poll, 2000); });
 }
 poll();
-say("No terminal. No folder. Tap Download cletus.wav. Then in Voice Creation, Import that file from Downloads.");
+say("Do not open Voice Creation. Stay here. Tap Play Cletus.");
 </script>
 </body>
 </html>
