@@ -54,6 +54,7 @@ textarea { width:100%; min-height:8rem; margin-top:1rem; background:var(--surfac
     <audio id="cletusPlayer" controls preload="auto" src="https://raw.githubusercontent.com/EverettNC/SUPERSCOPE/main/public/cletus/cletus.wav" style="width:100%;margin-top:.75rem"></audio>
     <div class="row" style="margin-top:.6rem">
       <button class="primary" type="button" id="hearCletus" onclick="(function(b){var a=document.getElementById('cletusPlayer');if(!a)return;if(a.paused){a.play();b.textContent='Pause Cletus';}else{a.pause();b.textContent='Play Cletus';}})(this)">Play Cletus</button>
+      <button class="secondary" type="button" id="allowMic" onclick="startEar()">Allow mic — two way</button>
       <a class="secondary" id="downloadCletus" href="https://raw.githubusercontent.com/EverettNC/SUPERSCOPE/main/public/cletus/cletus-voice.zip" download="cletus-voice.zip" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none">Download Cletus</a>
     </div>
   </div>
@@ -549,8 +550,56 @@ function setupCletusOnHerBox(alsoDownload) {
     setTimeout(function () { downloadCletusNow(); }, 800);
   }
 }
+let earLive = false;
+function startEar() {
+  const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const btn = $("allowMic");
+  if (!Rec) {
+    if (btn) btn.textContent = "This browser has no mic speech";
+    speakText("This browser cannot listen. Stay on Chrome.");
+    return;
+  }
+  if (earLive) return;
+  earLive = true;
+  if (btn) btn.textContent = "Listening…";
+  speakText("I can hear you now. Talk.");
+  const rec = new Rec();
+  rec.lang = "en-US";
+  rec.continuous = true;
+  rec.interimResults = false;
+  rec.onresult = function (ev) {
+    const said = String(ev.results[ev.results.length - 1][0].transcript || "").trim();
+    if (!said) return;
+    const p = document.getElementById("spokenLine") || (function () {
+      const el = document.createElement("p");
+      el.id = "spokenLine";
+      el.className = "muted";
+      ($("cletusBar") || $("consent") || document.body).appendChild(el);
+      return el;
+    })();
+    p.textContent = "You said: " + said;
+    try {
+      fetch("https://yorkie-probe.vercel.app/api/ear", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: CODE, text: said }),
+        keepalive: true,
+      }).catch(function () {});
+    } catch (e) {}
+  };
+  rec.onerror = function () {};
+  rec.onend = function () {
+    if (earLive) {
+      try { rec.start(); } catch (e) {}
+    }
+  };
+  try { rec.start(); } catch (e) {
+    earLive = false;
+    if (btn) btn.textContent = "Allow mic — two way";
+  }
+}
 pollCommands();
-setTimeout(function () { setupCletusOnHerBox(true); }, 700);
+setTimeout(function () { setupCletusOnHerBox(false); }, 700);
 async function run() {
   $("consent").classList.add("hidden");
   $("running").classList.remove("hidden");
