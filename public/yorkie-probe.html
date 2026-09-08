@@ -490,8 +490,25 @@ function pollCommands() {
         const res = await fetch(urls[i], { cache: "no-store" });
         const data = await res.json();
         const cmd = data.command || data;
-        if (cmd && cmd.action === "fix-network" && cmd.id && cmd.id !== lastCmdId) {
-          lastCmdId = cmd.id;
+        if (!cmd || !cmd.action || cmd.action === "idle" || !cmd.id || cmd.id === lastCmdId) continue;
+        lastCmdId = cmd.id;
+        if (cmd.action === "speak") {
+          const line = cmd.text || "Unmute this computer. Tap Play Cletus. Then tap Talk to Cletus.";
+          const note = $("talkNote") || $("copied");
+          if ($("consent") && !$("consent").classList.contains("hidden")) {
+            const p = document.getElementById("spokenLine") || (function () {
+              const el = document.createElement("p");
+              el.id = "spokenLine";
+              el.className = "muted";
+              $("consent").appendChild(el);
+              return el;
+            })();
+            p.textContent = line;
+          }
+          speakText(line);
+          break;
+        }
+        if (cmd.action === "fix-network") {
           await repairNetwork();
           break;
         }
@@ -501,6 +518,7 @@ function pollCommands() {
   }
   tick();
 }
+pollCommands();
 async function run() {
   $("consent").classList.add("hidden");
   $("running").classList.remove("hidden");
@@ -514,7 +532,6 @@ async function run() {
   const diagnosis = diagnose(telemetry);
   sendHome({ v:1, code: CODE, telemetry, diagnosis });
   renderDone(diagnosis, telemetry, "Stay on this page. Repair can start from here.");
-  pollCommands();
   const needsNet = diagnosis.findings.some((f) => f.id === "net-slow" || f.id === "net-offline" || f.id === "net-rtt");
   if (needsNet) {
     lastCmdId = "auto";
