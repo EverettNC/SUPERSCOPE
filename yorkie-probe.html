@@ -116,21 +116,49 @@ $("cletusPlayer").onended = () => { $("hearCletus").textContent = "Play Cletus";
 $("talkCletus").onclick = () => openTalk("cletus");
 $("talkPenny").onclick = () => openTalk("penny");
 $("talkBack").onclick = () => {
+  if (cletusAudio) {
+    try { cletusAudio.pause(); } catch (e) {}
+    cletusAudio = null;
+  }
   $("talk").classList.add("hidden");
   $("consent").classList.remove("hidden");
 };
 $("talkForm").onsubmit = (e) => { e.preventDefault(); void sendTalk(); };
 
 const TALK = {
-  cletus: { name: "Cletus", hello: "Hey. I'm here. Say it however it comes." },
+  cletus: { name: "Cletus", hello: "Hey. I'm here." },
   penny: { name: "Penny", hello: "Come sit. I'm listening." }
 };
+const CLETUS_CLIPS = [
+  "https://raw.githubusercontent.com/EverettNC/SUPERSCOPE/main/public/cletus/cletus_phrase_001.wav",
+  "https://raw.githubusercontent.com/EverettNC/SUPERSCOPE/main/public/cletus/cletus_phrase_002.wav",
+  "https://raw.githubusercontent.com/EverettNC/SUPERSCOPE/main/public/cletus/cletus_phrase_003.wav",
+  "https://raw.githubusercontent.com/EverettNC/SUPERSCOPE/main/public/cletus/cletus_phrase_004.wav",
+  "https://raw.githubusercontent.com/EverettNC/SUPERSCOPE/main/public/cletus/cletus_phrase_005.wav",
+  "https://raw.githubusercontent.com/EverettNC/SUPERSCOPE/main/public/cletus/cletus_phrase_006.wav",
+  "https://raw.githubusercontent.com/EverettNC/SUPERSCOPE/main/public/cletus/cletus_phrase_007.wav",
+  "https://raw.githubusercontent.com/EverettNC/SUPERSCOPE/main/public/cletus/cletus_phrase_008.wav"
+];
 let talkBeing = "cletus";
 let talkHist = [];
+let cletusClip = 0;
+let cletusAudio = null;
+
+function playCletusVoice() {
+  if (cletusAudio) {
+    try { cletusAudio.pause(); } catch (e) {}
+  }
+  const url = CLETUS_CLIPS[cletusClip % CLETUS_CLIPS.length];
+  cletusClip += 1;
+  cletusAudio = new Audio(url);
+  cletusAudio.play().catch(function () {});
+  $("talkNote").textContent = "That's Cletus. Unmute if you hear nothing.";
+}
 
 function openTalk(id) {
   talkBeing = id;
   talkHist = [];
+  cletusClip = 0;
   $("consent").classList.add("hidden");
   $("talk").classList.remove("hidden");
   $("talkBrand").textContent = TALK[id].name;
@@ -138,6 +166,7 @@ function openTalk(id) {
   $("chat").innerHTML = "";
   $("talkNote").textContent = "";
   addBubble("them", TALK[id].hello);
+  if (id === "cletus") playCletusVoice();
   $("talkInput").focus();
 }
 function addBubble(who, text) {
@@ -154,6 +183,12 @@ async function sendTalk() {
   input.value = "";
   addBubble("me", text);
   talkHist.push({ role: "user", content: text });
+  if (talkBeing === "cletus") {
+    addBubble("them", "Cletus");
+    playCletusVoice();
+    input.focus();
+    return;
+  }
   $("talkSend").disabled = true;
   $("talkNote").textContent = TALK[talkBeing].name + " is thinking.";
   try {
