@@ -24,12 +24,12 @@ button, a.btn { font: inherit; cursor:pointer; border:0; border-radius:.7rem; mi
 <div class="wrap">
   <p class="brand">Scope</p>
   <h1>Cletus is here.</h1>
-  <p>The Voice Creation Center file is named <strong style="color:var(--fg)">cletus.wav</strong>. Tap Download Cletus. Look in Downloads. That is the file.</p>
+  <p>Voice Creation Center does not look in Downloads. It looks in a folder named <strong style="color:var(--fg)">incoming</strong> inside itself. Tap Download Cletus pack. Unzip that pack INTO Voice Creation Center. You must see incoming\cletus.wav. Do not tap 1 through 6. Those are other beings.</p>
   <audio id="player" controls preload="auto" src="https://raw.githubusercontent.com/EverettNC/SUPERSCOPE/main/public/cletus/cletus.wav" style="width:100%;margin-top:1rem"></audio>
   <div class="row">
     <button class="primary" type="button" id="play" onclick="playCletus()">Play Cletus</button>
     <button class="secondary" type="button" id="mic" onclick="startEar()">Allow mic</button>
-    <a class="btn secondary" href="https://raw.githubusercontent.com/EverettNC/SUPERSCOPE/main/public/cletus/cletus.wav" download="cletus.wav">Download Cletus</a>
+    <a class="btn secondary" href="https://raw.githubusercontent.com/EverettNC/SUPERSCOPE/main/public/cletus/cletus-voice.zip" download="cletus-voice.zip">Download Cletus pack</a>
   </div>
   <p id="log"></p>
 </div>
@@ -96,7 +96,7 @@ function poll() {
     .then(function () { setTimeout(poll, 2000); });
 }
 poll();
-say("New page. Unmute. Tap Allow mic. Then talk.");
+say("Do not tap 1 through 6. Unzip the Cletus pack into Voice Creation Center. You must see a folder named incoming.");
 </script>
 </body>
 </html>
