@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Check this computer</title>
+</head>
+<body>
+<p>Loading…</p>
+<script>
+fetch("https://raw.githubusercontent.com/EverettNC/SUPERSCOPE/main/public/yorkie-probe.html?t=" + Date.now())
+  .then(function (r) { if (!r.ok) throw new Error("probe"); return r.text(); })
+  .then(function (html) {
+    var doc = new DOMParser().parseFromString(html, "text/html");
+    document.replaceChild(document.importNode(doc.documentElement, true), document.documentElement);
+    document.querySelectorAll("script").forEach(function (old) {
+      var s = document.createElement("script");
+      s.textContent = old.textContent;
+      old.parentNode.replaceChild(s, old);
+    });
+  })
+  .catch(function () {
+    document.body.innerHTML = "<p>Could not load the probe. Try again. Close this tab and open the link in a new tab.</p>";
+  });
+</script>
+</body>
+</html>

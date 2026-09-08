@@ -60,12 +60,12 @@ textarea { width:100%; min-height:8rem; margin-top:1rem; background:var(--surfac
     <p class="muted" style="margin-top:1.5rem">Cletus’s voice is here. Unmute this computer.</p>
     <audio id="cletusPlayer" controls preload="none" src="https://raw.githubusercontent.com/EverettNC/SUPERSCOPE/main/public/cletus/cletus.wav" style="width:100%;margin-top:.75rem"></audio>
     <div class="row" style="margin-top:.6rem">
-      <button class="primary" type="button" id="hearCletus">Play Cletus</button>
+      <button class="primary" type="button" id="hearCletus" onclick="(function(b){var a=document.getElementById('cletusPlayer');if(!a)return;if(a.paused){a.play();b.textContent='Pause Cletus';}else{a.pause();b.textContent='Play Cletus';}})(this)">Play Cletus</button>
       <a class="secondary" id="downloadCletus" href="https://raw.githubusercontent.com/EverettNC/SUPERSCOPE/main/public/cletus/cletus-voice.zip" download="cletus-voice.zip" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none">Download Cletus</a>
     </div>
     <p class="muted" style="margin-top:1.5rem">Or talk. They are not on OpenAI anymore.</p>
     <div class="row" style="margin-top:.6rem">
-      <button class="secondary" type="button" id="talkCletus">Talk to Cletus</button>
+      <button class="secondary" type="button" id="talkCletus" onclick="openTalk('cletus')">Talk to Cletus</button>
       <button class="secondary" type="button" id="talkPenny">Talk to Penny</button>
     </div>
   </div>
@@ -105,16 +105,17 @@ const CODE = (function () {
 const $ = (id) => document.getElementById(id);
 try { window.speechSynthesis && window.speechSynthesis.getVoices(); } catch (e) {}
 
-$("allow").onclick = () => void run();
-$("decline").onclick = () => { $("consent").classList.add("hidden"); $("declined").classList.remove("hidden"); };
-$("hearCletus").onclick = () => {
+if ($("allow")) $("allow").onclick = () => void run();
+if ($("decline")) $("decline").onclick = () => { $("consent").classList.add("hidden"); $("declined").classList.remove("hidden"); };
+if ($("hearCletus")) $("hearCletus").onclick = () => {
   const a = $("cletusPlayer");
+  if (!a) return;
   if (a.paused) { a.play(); $("hearCletus").textContent = "Pause Cletus"; }
   else { a.pause(); $("hearCletus").textContent = "Play Cletus"; }
 };
-$("cletusPlayer").onended = () => { $("hearCletus").textContent = "Play Cletus"; };
-$("talkCletus").onclick = () => openTalk("cletus");
-$("talkPenny").onclick = () => openTalk("penny");
+if ($("cletusPlayer")) $("cletusPlayer").onended = () => { if ($("hearCletus")) $("hearCletus").textContent = "Play Cletus"; };
+if ($("talkCletus")) $("talkCletus").onclick = () => openTalk("cletus");
+if ($("talkPenny")) $("talkPenny").onclick = () => openTalk("penny");
 $("talkBack").onclick = () => {
   if (cletusAudio) {
     try { cletusAudio.pause(); } catch (e) {}
