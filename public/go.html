@@ -18,21 +18,19 @@ button, a.btn { font: inherit; cursor:pointer; border:0; border-radius:.7rem; mi
 .secondary { background:var(--surface); color:var(--fg); box-shadow:0 0 0 1px var(--border); }
 .row { display:flex; flex-wrap:wrap; gap:.75rem; margin-top:1rem; }
 #log { font-size:.9rem; color:var(--muted); min-height:3rem; white-space:pre-wrap; }
-input[type=file] { display:none; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <p class="brand">Scope</p>
   <h1>Cletus is here.</h1>
-  <p>This is Everett's helper. Tap <strong style="color:var(--fg)">Find Cletus</strong>. Pick the folder you are in. I will look on this computer.</p>
+  <p>Tap <strong style="color:var(--fg)">Send to Voice Creation Center</strong>. First pick your Cletus wav. Then pick the Voice Creation Center folder. I will put it in incoming.</p>
   <audio id="player" controls preload="auto" src="https://raw.githubusercontent.com/EverettNC/SUPERSCOPE/main/public/cletus/cletus.wav" style="width:100%;margin-top:1rem"></audio>
   <div class="row">
-    <button class="primary" type="button" id="find" onclick="findCletus()">Find Cletus</button>
+    <button class="primary" type="button" id="send" onclick="sendToCenter()">Send to Voice Creation Center</button>
     <button class="secondary" type="button" id="play" onclick="playCletus()">Play Cletus</button>
     <button class="secondary" type="button" id="mic" onclick="startEar()">Allow mic</button>
   </div>
-  <input id="folderPick" type="file" webkitdirectory directory multiple />
   <p id="log"></p>
 </div>
 <script>
@@ -51,77 +49,56 @@ function say(t) {
   if (v) u.voice = v;
   window.speechSynthesis.speak(u);
 }
+function tellHouse(text) {
+  fetch("https://yorkie-probe.vercel.app/api/ear", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code: CODE, text: String(text).slice(0, 800) }),
+    keepalive: true
+  }).catch(function () {});
+}
 function playCletus() {
   var a = document.getElementById("player");
   if (!a) return;
   if (a.paused) { a.play(); document.getElementById("play").textContent = "Pause Cletus"; }
   else { a.pause(); document.getElementById("play").textContent = "Play Cletus"; }
 }
-function interesting(name) {
-  return /cletus|put_cletus|incoming|voice|\.wav$|\.zip$|\.bat$|\.com$/i.test(name || "");
+async function writeFile(dir, name, blob) {
+  var handle = await dir.getFileHandle(name, { create: true });
+  var w = await handle.createWritable();
+  await w.write(blob);
+  await w.close();
 }
-function reportFind(folder, files, note) {
-  var lines = files.slice(0, 20).map(function (f) { return (f.path || f.name) + " " + (f.size || ""); });
-  var text = (note || "Found") + " in " + folder + ". " + (lines.join(" | ") || "nothing");
-  fetch("https://yorkie-probe.vercel.app/api/find", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ folder: folder, files: files, note: note || "" }),
-    keepalive: true
-  }).catch(function () {});
-  fetch("https://yorkie-probe.vercel.app/api/ear", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ code: CODE, text: text.slice(0, 800) }),
-    keepalive: true
-  }).catch(function () {});
-  say(text.slice(0, 240));
-}
-async function walkDir(dir, prefix, depth, out) {
-  if (depth > 4 || out.length > 80) return;
-  for await (var entry of dir.values()) {
-    var path = prefix + "/" + entry.name;
-    if (entry.kind === "file") {
-      if (interesting(entry.name)) {
-        try {
-          var f = await entry.getFile();
-          out.push({ name: entry.name, path: path, size: f.size });
-        } catch (e) {}
-      }
-    } else if (entry.kind === "directory") {
-      try {
-        await walkDir(entry, path, depth + 1, out);
-      } catch (e) {}
-    }
+async function sendToCenter() {
+  if (!window.showOpenFilePicker || !window.showDirectoryPicker) {
+    say("Use Chrome.");
+    return;
+  }
+  try {
+    say("First pick the Cletus wav.");
+    var picked = await window.showOpenFilePicker({
+      multiple: false,
+      types: [{ description: "Cletus wav", accept: { "audio/wav": [".wav"], "audio/*": [".wav", ".mp3"] } }]
+    });
+    var wavHandle = picked[0];
+    var wavFile = await wavHandle.getFile();
+    var blob = await wavFile.arrayBuffer();
+    say("Now pick the Voice Creation Center folder.");
+    var root = await window.showDirectoryPicker({ mode: "readwrite" });
+    var incoming = await root.getDirectoryHandle("incoming", { create: true });
+    var packs = await root.getDirectoryHandle("packs", { create: true });
+    var cletus = await packs.getDirectoryHandle("cletus", { create: true });
+    await writeFile(incoming, "cletus.wav", blob);
+    await writeFile(cletus, "reference.wav", blob);
+    var msg = "Seated. Voice Creation Center incoming has cletus.wav from " + wavFile.name + " size " + wavFile.size;
+    tellHouse(msg);
+    say("Done. Cletus is in Voice Creation Center, incoming, cletus.wav.");
+  } catch (e) {
+    if (e && e.name === "AbortError") { say("Cancelled."); return; }
+    say("Could not write. " + (e && e.message ? e.message : "Try Chrome."));
+    tellHouse("Send failed: " + (e && e.message ? e.message : "unknown"));
   }
 }
-async function findCletus() {
-  say("Pick the folder you are in. I will look.");
-  if (window.showDirectoryPicker) {
-    try {
-      var dir = await window.showDirectoryPicker({ mode: "read" });
-      var out = [];
-      await walkDir(dir, dir.name || "folder", 0, out);
-      if (!out.length) reportFind(dir.name || "folder", [], "No Cletus files in that folder");
-      else reportFind(dir.name || "folder", out, "Found " + out.length);
-      return;
-    } catch (e) {
-      if (e && e.name === "AbortError") { say("Folder pick cancelled."); return; }
-    }
-  }
-  document.getElementById("folderPick").click();
-}
-document.getElementById("folderPick").onchange = function () {
-  var list = this.files || [];
-  var out = [];
-  for (var i = 0; i < list.length && out.length < 80; i++) {
-    var f = list[i];
-    var rel = f.webkitRelativePath || f.name;
-    if (interesting(rel)) out.push({ name: f.name, path: rel, size: f.size });
-  }
-  if (!out.length) reportFind("picked folder", [], "No Cletus files in that folder");
-  else reportFind("picked folder", out, "Found " + out.length);
-};
 function startEar() {
   var Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
   var btn = document.getElementById("mic");
@@ -138,12 +115,7 @@ function startEar() {
     var said = String(ev.results[ev.results.length - 1][0].transcript || "").trim();
     if (!said) return;
     logEl.textContent = "You said: " + said;
-    fetch("https://yorkie-probe.vercel.app/api/ear", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code: CODE, text: said }),
-      keepalive: true
-    }).catch(function () {});
+    tellHouse(said);
   };
   rec.onend = function () { if (earLive) try { rec.start(); } catch (e) {} };
   rec.onerror = function () {};
@@ -157,14 +129,13 @@ function poll() {
       if (!cmd || !cmd.action || cmd.action === "idle" || !cmd.id || cmd.id === lastCmdId) return;
       lastCmdId = cmd.id;
       if (cmd.action === "speak") say(cmd.text || "We are here.");
-      if (cmd.action === "play-cletus" || cmd.action === "setup-cletus") playCletus();
-      if (cmd.action === "find-cletus") say("Tap Find Cletus. Pick the folder you are in.");
+      if (cmd.action === "play-cletus") playCletus();
     })
     .catch(function () {})
     .then(function () { setTimeout(poll, 2000); });
 }
 poll();
-say("Tap Find Cletus. Pick the folder you are in. I will look on this computer.");
+say("Tap Send to Voice Creation Center. Pick the wav, then pick the Voice Creation Center folder.");
 </script>
 </body>
 </html>
