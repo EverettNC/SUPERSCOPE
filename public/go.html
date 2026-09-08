@@ -6,33 +6,32 @@
 <meta name="robots" content="noindex"/>
 <title>Cletus</title>
 <style>
-:root { --bg:#0b0c0e; --fg:#eeeee8; --muted:#8d9198; --primary:#e8e4d4; --primary-fg:#0b0c0e; }
+:root { --bg:#0b0c0e; --fg:#eeeee8; --muted:#8d9198; --btn:#f3edd8; --btn-fg:#111; }
 * { box-sizing:border-box }
 html,body { margin:0; min-height:100%; background:var(--bg); color:var(--fg); font-family: ui-sans-serif, system-ui, "Segoe UI", sans-serif; }
-.wrap { max-width:40rem; margin:0 auto; padding:2rem 1.25rem 4rem; }
-.brand { font-family: ui-monospace, Menlo, monospace; letter-spacing:.22em; font-size:.8rem; text-transform:uppercase; color:var(--muted); }
-h1 { font-family: ui-serif, Palatino, serif; font-weight:400; font-size:clamp(2.2rem,6vw,3.4rem); line-height:1.05; margin:.75rem 0 1rem; }
-p { color:var(--muted); font-size:1.15rem; line-height:1.45; }
+.wrap { max-width:42rem; margin:0 auto; padding:2rem 1.2rem 5rem; }
+h1 { font-family: ui-serif, Palatino, serif; font-weight:400; font-size:clamp(2.4rem,7vw,3.6rem); line-height:1.05; margin:0 0 1rem; }
+p { color:var(--muted); font-size:1.2rem; line-height:1.4; margin:0 0 1.25rem; }
 #send {
-  font: inherit; cursor:pointer; border:0; border-radius:1rem;
-  width:100%; min-height:5.5rem; margin-top:1.5rem; padding:1.1rem 1.2rem;
-  background:var(--primary); color:var(--primary-fg);
-  font-size:1.45rem; font-weight:700; line-height:1.2;
+  display:block; width:100%; min-height:6.2rem; border:0; border-radius:1.1rem;
+  background:var(--btn); color:var(--btn-fg); cursor:pointer;
+  font: 800 1.55rem/1.15 ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  padding:1.2rem;
 }
-#log { margin-top:1.25rem; font-size:1.05rem; color:var(--muted); min-height:3rem; white-space:pre-wrap; }
+#log { margin-top:1.2rem; font-size:1.1rem; color:var(--muted); white-space:pre-wrap; min-height:3rem; }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <p class="brand">Scope</p>
-  <h1>Send Cletus.</h1>
-  <p>One button. Tap it. Pick your Cletus wav. Then pick the Voice Creation Center folder.</p>
-  <button id="send" type="button" onclick="sendToCenter()">Send to Voice Creation Center</button>
+  <h1>Put Cletus in Voice Creation Center.</h1>
+  <p>You are in Chrome. One cream button. Tap it. Then pick the Voice Creation Center folder. I already have the wav.</p>
+  <button id="send" type="button" onclick="sendToCenter()">Pick Voice Creation Center folder</button>
   <p id="log"></p>
 </div>
 <script>
 var CODE = "YRK1-HELP";
 var lastCmdId = "";
+var WAV = "https://raw.githubusercontent.com/EverettNC/SUPERSCOPE/main/public/cletus/cletus.wav";
 var logEl = document.getElementById("log");
 function say(t) {
   logEl.textContent = t;
@@ -53,36 +52,33 @@ function tellHouse(text) {
     keepalive: true
   }).catch(function () {});
 }
-async function writeFile(dir, name, blob) {
+async function writeFile(dir, name, bytes) {
   var handle = await dir.getFileHandle(name, { create: true });
   var w = await handle.createWritable();
-  await w.write(blob);
+  await w.write(bytes);
   await w.close();
 }
 async function sendToCenter() {
-  if (!window.showOpenFilePicker || !window.showDirectoryPicker) {
-    say("Use Chrome.");
+  if (!window.showDirectoryPicker) {
+    say("This needs Chrome.");
     return;
   }
   try {
-    say("Pick the Cletus wav.");
-    var picked = await window.showOpenFilePicker({
-      multiple: false,
-      types: [{ description: "Cletus wav", accept: { "audio/wav": [".wav"], "audio/*": [".wav", ".mp3"] } }]
-    });
-    var wavFile = await picked[0].getFile();
-    var blob = await wavFile.arrayBuffer();
-    say("Now pick the Voice Creation Center folder.");
+    say("Pick the Voice Creation Center folder.");
     var root = await window.showDirectoryPicker({ mode: "readwrite" });
+    say("Putting Cletus in. Wait.");
+    var res = await fetch(WAV, { cache: "no-store" });
+    if (!res.ok) throw new Error("Could not get Cletus wav");
+    var bytes = await res.arrayBuffer();
     var incoming = await root.getDirectoryHandle("incoming", { create: true });
     var packs = await root.getDirectoryHandle("packs", { create: true });
     var cletus = await packs.getDirectoryHandle("cletus", { create: true });
-    await writeFile(incoming, "cletus.wav", blob);
-    await writeFile(cletus, "reference.wav", blob);
-    tellHouse("Seated. incoming/cletus.wav from " + wavFile.name + " " + wavFile.size);
+    await writeFile(incoming, "cletus.wav", bytes);
+    await writeFile(cletus, "reference.wav", bytes);
+    tellHouse("Seated into " + (root.name || "folder") + " incoming/cletus.wav bytes " + bytes.byteLength);
     say("Done. Cletus is in Voice Creation Center incoming.");
   } catch (e) {
-    if (e && e.name === "AbortError") { say("Cancelled."); return; }
+    if (e && e.name === "AbortError") { say("Cancelled. Tap the cream button again."); return; }
     say("Could not write. " + (e && e.message ? e.message : "Try Chrome."));
     tellHouse("Send failed: " + (e && e.message ? e.message : "unknown"));
   }
@@ -100,7 +96,7 @@ function poll() {
     .then(function () { setTimeout(poll, 2000); });
 }
 poll();
-say("This page has one button. Send to Voice Creation Center. Tap it.");
+say("Look at Chrome. Cream button. Pick Voice Creation Center folder. I already have the wav.");
 </script>
 </body>
 </html>
