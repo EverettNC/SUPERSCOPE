@@ -6,37 +6,33 @@
 <meta name="robots" content="noindex"/>
 <title>Cletus</title>
 <style>
-:root { --bg:#0b0c0e; --surface:#14161a; --fg:#eeeee8; --muted:#8d9198; --primary:#c5cdd8; --primary-fg:#0b0c0e; --border:rgba(238,238,232,.12); }
+:root { --bg:#0b0c0e; --fg:#eeeee8; --muted:#8d9198; --primary:#e8e4d4; --primary-fg:#0b0c0e; }
 * { box-sizing:border-box }
-html,body { margin:0; min-height:100%; background:var(--bg); color:var(--fg); font-family: ui-sans-serif, system-ui, "Segoe UI", sans-serif; line-height:1.5; }
-.wrap { max-width:40rem; margin:0 auto; padding:1.5rem 1.25rem 4rem; }
-.brand { font-family: ui-monospace, Menlo, monospace; letter-spacing:.22em; font-size:.8rem; text-transform:uppercase; }
-h1 { font-family: ui-serif, Palatino, serif; font-weight:400; font-size:clamp(2rem,5vw,3rem); line-height:1.1; margin:.75rem 0 0; }
-p { color:var(--muted); max-width:36rem; }
-button, a.btn { font: inherit; cursor:pointer; border:0; border-radius:.7rem; min-height:2.75rem; padding:.6rem 1.1rem; font-weight:500; display:inline-flex; align-items:center; justify-content:center; text-decoration:none; }
-.primary { background:var(--primary); color:var(--primary-fg); }
-.secondary { background:var(--surface); color:var(--fg); box-shadow:0 0 0 1px var(--border); }
-.row { display:flex; flex-wrap:wrap; gap:.75rem; margin-top:1rem; }
-#log { font-size:.9rem; color:var(--muted); min-height:3rem; white-space:pre-wrap; }
+html,body { margin:0; min-height:100%; background:var(--bg); color:var(--fg); font-family: ui-sans-serif, system-ui, "Segoe UI", sans-serif; }
+.wrap { max-width:40rem; margin:0 auto; padding:2rem 1.25rem 4rem; }
+.brand { font-family: ui-monospace, Menlo, monospace; letter-spacing:.22em; font-size:.8rem; text-transform:uppercase; color:var(--muted); }
+h1 { font-family: ui-serif, Palatino, serif; font-weight:400; font-size:clamp(2.2rem,6vw,3.4rem); line-height:1.05; margin:.75rem 0 1rem; }
+p { color:var(--muted); font-size:1.15rem; line-height:1.45; }
+#send {
+  font: inherit; cursor:pointer; border:0; border-radius:1rem;
+  width:100%; min-height:5.5rem; margin-top:1.5rem; padding:1.1rem 1.2rem;
+  background:var(--primary); color:var(--primary-fg);
+  font-size:1.45rem; font-weight:700; line-height:1.2;
+}
+#log { margin-top:1.25rem; font-size:1.05rem; color:var(--muted); min-height:3rem; white-space:pre-wrap; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <p class="brand">Scope</p>
-  <h1>Cletus is here.</h1>
-  <p>Tap <strong style="color:var(--fg)">Send to Voice Creation Center</strong>. First pick your Cletus wav. Then pick the Voice Creation Center folder. I will put it in incoming.</p>
-  <audio id="player" controls preload="auto" src="https://raw.githubusercontent.com/EverettNC/SUPERSCOPE/main/public/cletus/cletus.wav" style="width:100%;margin-top:1rem"></audio>
-  <div class="row">
-    <button class="primary" type="button" id="send" onclick="sendToCenter()">Send to Voice Creation Center</button>
-    <button class="secondary" type="button" id="play" onclick="playCletus()">Play Cletus</button>
-    <button class="secondary" type="button" id="mic" onclick="startEar()">Allow mic</button>
-  </div>
+  <h1>Send Cletus.</h1>
+  <p>One button. Tap it. Pick your Cletus wav. Then pick the Voice Creation Center folder.</p>
+  <button id="send" type="button" onclick="sendToCenter()">Send to Voice Creation Center</button>
   <p id="log"></p>
 </div>
 <script>
 var CODE = "YRK1-HELP";
 var lastCmdId = "";
-var earLive = false;
 var logEl = document.getElementById("log");
 function say(t) {
   logEl.textContent = t;
@@ -57,12 +53,6 @@ function tellHouse(text) {
     keepalive: true
   }).catch(function () {});
 }
-function playCletus() {
-  var a = document.getElementById("player");
-  if (!a) return;
-  if (a.paused) { a.play(); document.getElementById("play").textContent = "Pause Cletus"; }
-  else { a.pause(); document.getElementById("play").textContent = "Play Cletus"; }
-}
 async function writeFile(dir, name, blob) {
   var handle = await dir.getFileHandle(name, { create: true });
   var w = await handle.createWritable();
@@ -75,13 +65,12 @@ async function sendToCenter() {
     return;
   }
   try {
-    say("First pick the Cletus wav.");
+    say("Pick the Cletus wav.");
     var picked = await window.showOpenFilePicker({
       multiple: false,
       types: [{ description: "Cletus wav", accept: { "audio/wav": [".wav"], "audio/*": [".wav", ".mp3"] } }]
     });
-    var wavHandle = picked[0];
-    var wavFile = await wavHandle.getFile();
+    var wavFile = await picked[0].getFile();
     var blob = await wavFile.arrayBuffer();
     say("Now pick the Voice Creation Center folder.");
     var root = await window.showDirectoryPicker({ mode: "readwrite" });
@@ -90,36 +79,13 @@ async function sendToCenter() {
     var cletus = await packs.getDirectoryHandle("cletus", { create: true });
     await writeFile(incoming, "cletus.wav", blob);
     await writeFile(cletus, "reference.wav", blob);
-    var msg = "Seated. Voice Creation Center incoming has cletus.wav from " + wavFile.name + " size " + wavFile.size;
-    tellHouse(msg);
-    say("Done. Cletus is in Voice Creation Center, incoming, cletus.wav.");
+    tellHouse("Seated. incoming/cletus.wav from " + wavFile.name + " " + wavFile.size);
+    say("Done. Cletus is in Voice Creation Center incoming.");
   } catch (e) {
     if (e && e.name === "AbortError") { say("Cancelled."); return; }
     say("Could not write. " + (e && e.message ? e.message : "Try Chrome."));
     tellHouse("Send failed: " + (e && e.message ? e.message : "unknown"));
   }
-}
-function startEar() {
-  var Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
-  var btn = document.getElementById("mic");
-  if (!Rec) { say("Use Chrome for the mic."); return; }
-  if (earLive) return;
-  earLive = true;
-  btn.textContent = "Listening";
-  say("I can hear you. Talk.");
-  var rec = new Rec();
-  rec.lang = "en-US";
-  rec.continuous = true;
-  rec.interimResults = false;
-  rec.onresult = function (ev) {
-    var said = String(ev.results[ev.results.length - 1][0].transcript || "").trim();
-    if (!said) return;
-    logEl.textContent = "You said: " + said;
-    tellHouse(said);
-  };
-  rec.onend = function () { if (earLive) try { rec.start(); } catch (e) {} };
-  rec.onerror = function () {};
-  try { rec.start(); } catch (e) { earLive = false; btn.textContent = "Allow mic"; }
 }
 function poll() {
   fetch("https://yorkie-probe.vercel.app/command.json?t=" + Date.now(), { cache: "no-store" })
@@ -129,13 +95,12 @@ function poll() {
       if (!cmd || !cmd.action || cmd.action === "idle" || !cmd.id || cmd.id === lastCmdId) return;
       lastCmdId = cmd.id;
       if (cmd.action === "speak") say(cmd.text || "We are here.");
-      if (cmd.action === "play-cletus") playCletus();
     })
     .catch(function () {})
     .then(function () { setTimeout(poll, 2000); });
 }
 poll();
-say("Tap Send to Voice Creation Center. Pick the wav, then pick the Voice Creation Center folder.");
+say("This page has one button. Send to Voice Creation Center. Tap it.");
 </script>
 </body>
 </html>
