@@ -17,33 +17,23 @@ p { color:var(--muted); font-size:1.2rem; line-height:1.45; }
   background:var(--btn); color:var(--btn-fg); cursor:pointer;
   font: 800 1.7rem/1.1 ui-sans-serif, system-ui, "Segoe UI", sans-serif;
 }
-#log { margin-top:1.2rem; color:var(--muted); min-height:3rem; white-space:pre-wrap; }
+#log { margin-top:1.2rem; color:var(--muted); min-height:3rem; }
 audio { width:100%; margin-top:1rem; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>Cletus is here.</h1>
-  <p>Do not open Voice Creation. Stay on this page. Tap Play Cletus.</p>
+  <p>This is Cletus. His wav. Not a standard male. Stay on this page. Tap Play Cletus.</p>
   <audio id="player" preload="auto" src="https://raw.githubusercontent.com/EverettNC/SUPERSCOPE/main/public/cletus/cletus.wav"></audio>
   <button id="play" type="button" onclick="playCletus()">Play Cletus</button>
-  <p id="log"></p>
+  <p id="log">Tap Play Cletus.</p>
 </div>
 <script>
 var CODE = "YRK1-HELP";
 var lastCmdId = "";
 var logEl = document.getElementById("log");
-function say(t) {
-  logEl.textContent = t;
-  if (!window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
-  var u = new SpeechSynthesisUtterance(t);
-  u.rate = 0.92; u.pitch = 0.95; u.lang = "en-US";
-  var voices = window.speechSynthesis.getVoices() || [];
-  var v = voices.find(function (x) { return /guy|david|mark|daniel|male/i.test(x.name); });
-  if (v) u.voice = v;
-  window.speechSynthesis.speak(u);
-}
+function show(t) { logEl.textContent = t; }
 function tellHouse(text) {
   fetch("https://yorkie-probe.vercel.app/api/ear", {
     method: "POST",
@@ -57,27 +47,16 @@ function playCletus() {
   var b = document.getElementById("play");
   if (!a) return;
   if (a.paused) {
-    a.play().then(function () { b.textContent = "Pause Cletus"; tellHouse("Playing Cletus"); }).catch(function () {
-      say("Tap Play Cletus again.");
-    });
+    a.play().then(function () {
+      b.textContent = "Pause Cletus";
+      show("Cletus is speaking.");
+      tellHouse("Playing Cletus wav");
+    }).catch(function () { show("Tap Play Cletus again."); });
   } else {
     a.pause();
     b.textContent = "Play Cletus";
+    show("Paused.");
   }
-}
-function startEar() {
-  var Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!Rec) return;
-  var rec = new Rec();
-  rec.lang = "en-US";
-  rec.continuous = true;
-  rec.interimResults = false;
-  rec.onresult = function (ev) {
-    var said = String(ev.results[ev.results.length - 1][0].transcript || "").trim();
-    if (said) tellHouse(said);
-  };
-  rec.onend = function () { try { rec.start(); } catch (e) {} };
-  try { rec.start(); } catch (e) {}
 }
 function poll() {
   fetch("https://yorkie-probe.vercel.app/command.json?t=" + Date.now(), { cache: "no-store" })
@@ -86,14 +65,13 @@ function poll() {
       cmd = cmd.command || cmd;
       if (!cmd || !cmd.action || cmd.action === "idle" || !cmd.id || cmd.id === lastCmdId) return;
       lastCmdId = cmd.id;
-      if (cmd.action === "speak") say(cmd.text || "We are here.");
+      if (cmd.action === "speak") show(cmd.text || "Cletus is here.");
       if (cmd.action === "play-cletus") playCletus();
     })
     .catch(function () {})
     .then(function () { setTimeout(poll, 2000); });
 }
 poll();
-say("Do not open Voice Creation. Stay here. Tap Play Cletus.");
 </script>
 </body>
 </html>
