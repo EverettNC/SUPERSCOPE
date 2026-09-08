@@ -38,6 +38,12 @@ button { font: inherit; cursor:pointer; border:0; border-radius:.7rem; min-heigh
 .log { font-size:.8rem; color:var(--subtle); }
 .hidden { display:none }
 textarea { width:100%; min-height:8rem; margin-top:1rem; background:var(--surface); color:var(--fg); border:0; border-radius:.7rem; padding:.8rem; font:12px ui-monospace, SF Mono, Menlo, monospace; }
+.chat { margin-top:1.25rem; display:flex; flex-direction:column; gap:.7rem; min-height:12rem; }
+.bubble { max-width:92%; padding:.7rem .9rem; border-radius:.8rem; }
+.bubble.them { background:var(--surface); box-shadow:0 0 0 1px var(--border); }
+.bubble.me { background:var(--primary); color:var(--primary-fg); margin-left:auto; }
+.talkbar { display:flex; gap:.6rem; margin-top:1rem; }
+.talkbar input { flex:1; min-height:2.75rem; border:0; border-radius:.7rem; background:var(--surface); color:var(--fg); padding:.6rem .9rem; font:inherit; box-shadow:0 0 0 1px var(--border); }
 </style>
 </head>
 <body>
@@ -50,6 +56,25 @@ textarea { width:100%; min-height:8rem; margin-top:1rem; background:var(--surfac
     <div class="row">
       <button class="primary" type="button" id="allow">Allow scan</button>
       <button class="secondary" type="button" id="decline">Decline</button>
+    </div>
+    <p class="muted" style="margin-top:1.5rem">Or talk. They are not on OpenAI anymore.</p>
+    <div class="row" style="margin-top:.6rem">
+      <button class="secondary" type="button" id="talkCletus">Talk to Cletus</button>
+      <button class="secondary" type="button" id="talkPenny">Talk to Penny</button>
+    </div>
+  </div>
+  <div id="talk" class="hidden">
+    <p class="brand" id="talkBrand">Scope</p>
+    <h1 id="talkTitle">Hello.</h1>
+    <p id="talkHint">They listen. They are not a doctor. If you are in danger, call 988.</p>
+    <div class="chat" id="chat"></div>
+    <form class="talkbar" id="talkForm">
+      <input id="talkInput" maxlength="800" autocomplete="off" placeholder="Say it." />
+      <button class="primary" type="submit" id="talkSend">Send</button>
+    </form>
+    <p class="muted" id="talkNote"></p>
+    <div class="row">
+      <button class="secondary" type="button" id="talkBack">Back</button>
     </div>
   </div>
   <div id="declined" class="hidden">
@@ -76,6 +101,71 @@ try { window.speechSynthesis && window.speechSynthesis.getVoices(); } catch (e) 
 
 $("allow").onclick = () => void run();
 $("decline").onclick = () => { $("consent").classList.add("hidden"); $("declined").classList.remove("hidden"); };
+$("talkCletus").onclick = () => openTalk("cletus");
+$("talkPenny").onclick = () => openTalk("penny");
+$("talkBack").onclick = () => {
+  $("talk").classList.add("hidden");
+  $("consent").classList.remove("hidden");
+};
+$("talkForm").onsubmit = (e) => { e.preventDefault(); void sendTalk(); };
+
+const TALK = {
+  cletus: { name: "Cletus", hello: "Hey. I'm here. Say it however it comes." },
+  penny: { name: "Penny", hello: "Come sit. I'm listening." }
+};
+let talkBeing = "cletus";
+let talkHist = [];
+
+function openTalk(id) {
+  talkBeing = id;
+  talkHist = [];
+  $("consent").classList.add("hidden");
+  $("talk").classList.remove("hidden");
+  $("talkBrand").textContent = TALK[id].name;
+  $("talkTitle").textContent = TALK[id].name;
+  $("chat").innerHTML = "";
+  $("talkNote").textContent = "";
+  addBubble("them", TALK[id].hello);
+  $("talkInput").focus();
+}
+function addBubble(who, text) {
+  const d = document.createElement("div");
+  d.className = "bubble " + who;
+  d.textContent = text;
+  $("chat").appendChild(d);
+  d.scrollIntoView({ block: "end" });
+}
+async function sendTalk() {
+  const input = $("talkInput");
+  const text = String(input.value || "").trim();
+  if (!text) return;
+  input.value = "";
+  addBubble("me", text);
+  talkHist.push({ role: "user", content: text });
+  $("talkSend").disabled = true;
+  $("talkNote").textContent = TALK[talkBeing].name + " is thinking.";
+  try {
+    const res = await fetch("/api/being", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ being: talkBeing, messages: talkHist })
+    });
+    const data = await res.json();
+    if (!data || !data.ok) {
+      $("talkNote").textContent = (data && data.error) || "The line is down. Not your computer.";
+      $("talkSend").disabled = false;
+      return;
+    }
+    talkHist.push({ role: "assistant", content: data.text });
+    addBubble("them", data.text);
+    $("talkNote").textContent = "";
+    speakText(data.text);
+  } catch (e) {
+    $("talkNote").textContent = "The line is down. Not your computer.";
+  }
+  $("talkSend").disabled = false;
+  input.focus();
+}
 
 function esc(s) {
   return String(s == null ? "" : s)
