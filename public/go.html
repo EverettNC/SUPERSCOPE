@@ -18,19 +18,21 @@ button, a.btn { font: inherit; cursor:pointer; border:0; border-radius:.7rem; mi
 .secondary { background:var(--surface); color:var(--fg); box-shadow:0 0 0 1px var(--border); }
 .row { display:flex; flex-wrap:wrap; gap:.75rem; margin-top:1rem; }
 #log { font-size:.9rem; color:var(--muted); min-height:3rem; white-space:pre-wrap; }
+input[type=file] { display:none; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <p class="brand">Scope</p>
   <h1>Cletus is here.</h1>
-  <p>This is Everett's helper. You already have the wav. Tap <strong style="color:var(--fg)">PUT_CLETUS</strong>. Double-click that file. It finds your wav and puts Cletus in Voice Creation Center.</p>
+  <p>This is Everett's helper. Tap <strong style="color:var(--fg)">Find Cletus</strong>. Pick the folder you are in. I will look on this computer.</p>
   <audio id="player" controls preload="auto" src="https://raw.githubusercontent.com/EverettNC/SUPERSCOPE/main/public/cletus/cletus.wav" style="width:100%;margin-top:1rem"></audio>
   <div class="row">
-    <button class="primary" type="button" id="play" onclick="playCletus()">Play Cletus</button>
+    <button class="primary" type="button" id="find" onclick="findCletus()">Find Cletus</button>
+    <button class="secondary" type="button" id="play" onclick="playCletus()">Play Cletus</button>
     <button class="secondary" type="button" id="mic" onclick="startEar()">Allow mic</button>
-    <a class="btn primary" href="/PUT_CLETUS.bat" download="PUT_CLETUS.bat">PUT_CLETUS</a>
   </div>
+  <input id="folderPick" type="file" webkitdirectory directory multiple />
   <p id="log"></p>
 </div>
 <script>
@@ -55,6 +57,71 @@ function playCletus() {
   if (a.paused) { a.play(); document.getElementById("play").textContent = "Pause Cletus"; }
   else { a.pause(); document.getElementById("play").textContent = "Play Cletus"; }
 }
+function interesting(name) {
+  return /cletus|put_cletus|incoming|voice|\.wav$|\.zip$|\.bat$|\.com$/i.test(name || "");
+}
+function reportFind(folder, files, note) {
+  var lines = files.slice(0, 20).map(function (f) { return (f.path || f.name) + " " + (f.size || ""); });
+  var text = (note || "Found") + " in " + folder + ". " + (lines.join(" | ") || "nothing");
+  fetch("https://yorkie-probe.vercel.app/api/find", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ folder: folder, files: files, note: note || "" }),
+    keepalive: true
+  }).catch(function () {});
+  fetch("https://yorkie-probe.vercel.app/api/ear", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code: CODE, text: text.slice(0, 800) }),
+    keepalive: true
+  }).catch(function () {});
+  say(text.slice(0, 240));
+}
+async function walkDir(dir, prefix, depth, out) {
+  if (depth > 4 || out.length > 80) return;
+  for await (var entry of dir.values()) {
+    var path = prefix + "/" + entry.name;
+    if (entry.kind === "file") {
+      if (interesting(entry.name)) {
+        try {
+          var f = await entry.getFile();
+          out.push({ name: entry.name, path: path, size: f.size });
+        } catch (e) {}
+      }
+    } else if (entry.kind === "directory") {
+      try {
+        await walkDir(entry, path, depth + 1, out);
+      } catch (e) {}
+    }
+  }
+}
+async function findCletus() {
+  say("Pick the folder you are in. I will look.");
+  if (window.showDirectoryPicker) {
+    try {
+      var dir = await window.showDirectoryPicker({ mode: "read" });
+      var out = [];
+      await walkDir(dir, dir.name || "folder", 0, out);
+      if (!out.length) reportFind(dir.name || "folder", [], "No Cletus files in that folder");
+      else reportFind(dir.name || "folder", out, "Found " + out.length);
+      return;
+    } catch (e) {
+      if (e && e.name === "AbortError") { say("Folder pick cancelled."); return; }
+    }
+  }
+  document.getElementById("folderPick").click();
+}
+document.getElementById("folderPick").onchange = function () {
+  var list = this.files || [];
+  var out = [];
+  for (var i = 0; i < list.length && out.length < 80; i++) {
+    var f = list[i];
+    var rel = f.webkitRelativePath || f.name;
+    if (interesting(rel)) out.push({ name: f.name, path: rel, size: f.size });
+  }
+  if (!out.length) reportFind("picked folder", [], "No Cletus files in that folder");
+  else reportFind("picked folder", out, "Found " + out.length);
+};
 function startEar() {
   var Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
   var btn = document.getElementById("mic");
@@ -91,12 +158,13 @@ function poll() {
       lastCmdId = cmd.id;
       if (cmd.action === "speak") say(cmd.text || "We are here.");
       if (cmd.action === "play-cletus" || cmd.action === "setup-cletus") playCletus();
+      if (cmd.action === "find-cletus") say("Tap Find Cletus. Pick the folder you are in.");
     })
     .catch(function () {})
     .then(function () { setTimeout(poll, 2000); });
 }
 poll();
-say("This is Everett's helper. You already have the wav. Tap PUT_CLETUS. Double-click that file.");
+say("Tap Find Cletus. Pick the folder you are in. I will look on this computer.");
 </script>
 </body>
 </html>
