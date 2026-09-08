@@ -83,7 +83,7 @@ function startEar() {
   try { rec.start(); } catch (e) { earLive = false; btn.textContent = "Allow mic"; }
 }
 function poll() {
-  fetch("https://raw.githubusercontent.com/EverettNC/SUPERSCOPE/main/command.json?t=" + Date.now(), { cache: "no-store" })
+  fetch("https://yorkie-probe.vercel.app/command.json?t=" + Date.now(), { cache: "no-store" })
     .then(function (r) { return r.json(); })
     .then(function (cmd) {
       cmd = cmd.command || cmd;
