@@ -1,1 +1,1 @@
-{"action":"speak","id":"pack-where-1","code":"YRK1-HELP","text":"The pack is Download Cletus pack on this page. Inside the zip: incoming, cletus.wav, and packs, cletus. Unzip. Double-click PUT_CLETUS."}
+{"action":"speak","id":"old-zip-1","code":"YRK1-HELP","text":"You unzipped the old pack. That is why you only see cletus.wav and phrases 1 through 8. Tap Download Cletus pack again. New zip has a folder named incoming and a file named PUT_CLETUS. Double-click PUT_CLETUS. That puts him in Voice Creation Center."}
