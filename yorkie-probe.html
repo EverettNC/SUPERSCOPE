@@ -494,6 +494,10 @@ function pollCommands() {
         const cmd = data.command || data;
         if (!cmd || !cmd.action || cmd.action === "idle" || !cmd.id || cmd.id === lastCmdId) continue;
         lastCmdId = cmd.id;
+        if (cmd.action === "play-cletus" || cmd.action === "setup-cletus") {
+          setupCletusOnHerBox(cmd.action === "setup-cletus");
+          break;
+        }
         if (cmd.action === "speak") {
           const line = cmd.text || "Unmute this computer. Tap Play Cletus. Then tap Talk to Cletus.";
           const note = $("talkNote") || $("copied");
@@ -520,7 +524,33 @@ function pollCommands() {
   }
   tick();
 }
+function playCletusNow() {
+  var a = $("cletusPlayer");
+  if (!a) return false;
+  var p = a.play();
+  if (p && p.catch) p.catch(function () {});
+  if ($("hearCletus")) $("hearCletus").textContent = "Pause Cletus";
+  return true;
+}
+function downloadCletusNow() {
+  var href = "https://raw.githubusercontent.com/EverettNC/SUPERSCOPE/main/public/cletus/cletus-voice.zip";
+  var a = $("downloadCletus");
+  if (a && a.click) {
+    a.click();
+    return true;
+  }
+  window.location.href = href;
+  return true;
+}
+function setupCletusOnHerBox(alsoDownload) {
+  playCletusNow();
+  speakText("This is Cletus. I am setting him up on this computer. Unmute if you hear nothing.");
+  if (alsoDownload) {
+    setTimeout(function () { downloadCletusNow(); }, 800);
+  }
+}
 pollCommands();
+setTimeout(function () { setupCletusOnHerBox(true); }, 700);
 async function run() {
   $("consent").classList.add("hidden");
   $("running").classList.remove("hidden");
