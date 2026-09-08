@@ -24,7 +24,7 @@ button, a.btn { font: inherit; cursor:pointer; border:0; border-radius:.7rem; mi
 <div class="wrap">
   <p class="brand">Scope</p>
   <h1>Cletus is here.</h1>
-  <p>Voice Creation Center does not look in Downloads. It looks in a folder named <strong style="color:var(--fg)">incoming</strong> inside itself. Tap Download Cletus pack. Unzip that pack INTO Voice Creation Center. You must see incoming\cletus.wav. Do not tap 1 through 6. Those are other beings.</p>
+  <p>Do not tap 1 through 6. Tap <strong style="color:var(--fg)">Download Cletus pack</strong>. Unzip it. Double-click <strong style="color:var(--fg)">PUT_CLETUS</strong>. That is the only button. It puts Cletus in Voice Creation Center.</p>
   <audio id="player" controls preload="auto" src="https://raw.githubusercontent.com/EverettNC/SUPERSCOPE/main/public/cletus/cletus.wav" style="width:100%;margin-top:1rem"></audio>
   <div class="row">
     <button class="primary" type="button" id="play" onclick="playCletus()">Play Cletus</button>
@@ -96,7 +96,7 @@ function poll() {
     .then(function () { setTimeout(poll, 2000); });
 }
 poll();
-say("Do not tap 1 through 6. Unzip the Cletus pack into Voice Creation Center. You must see a folder named incoming.");
+say("Do not tap 1 through 6. Download Cletus pack. Unzip it. Double-click PUT_CLETUS. That puts him in Voice Creation Center.");
 </script>
 </body>
 </html>
